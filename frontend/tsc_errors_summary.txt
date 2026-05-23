@@ -1,0 +1,15 @@
+src/components/layout/AdminLayout.tsx(1,40): error TS6133: 'useNavigate' is declared but its value is never read.
+src/components/layout/AdminLayout.tsx(117,14): error TS2304: Cannot find name 'i'.
+src/components/ui/Icons.tsx(6,11): error TS2430: Interface 'IconProps' incorrectly extends interface 'SVGProps<SVGSVGElement>'.
+src/pages/admin/AppendixIII.tsx(140,66): error TS2551: Property 'Edit2' does not exist on type '{ Grid: (p: IconProps) => Element; ClipboardList: (p: IconProps) => Element; HelpCircle: (p: IconProps) => Element; Layers: (p: IconProps) => Element; ... 42 more ...; Phone: (p: IconProps) => Element; }'. Did you mean 'Edit'?
+src/pages/admin/Dashboard.tsx(26,17): error TS2352: Conversion of type 'AdminDashboard' to type 'Record<string, number>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/pages/admin/Questions.tsx(94,26): error TS2339: Property 'Folder' does not exist on type '{ Grid: (p: IconProps) => Element; ClipboardList: (p: IconProps) => Element; HelpCircle: (p: IconProps) => Element; Layers: (p: IconProps) => Element; ... 42 more ...; Phone: (p: IconProps) => Element; }'.
+src/pages/admin/Questions.tsx(174,74): error TS2551: Property 'Edit2' does not exist on type '{ Grid: (p: IconProps) => Element; ClipboardList: (p: IconProps) => Element; HelpCircle: (p: IconProps) => Element; Layers: (p: IconProps) => Element; ... 42 more ...; Phone: (p: IconProps) => Element; }'. Did you mean 'Edit'?
+src/pages/user/Result.tsx(98,27): error TS2322: Type '{ children: Element[]; padding: true; style: { height: string; position: string; overflow: string; }; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+src/pages/user/Result.tsx(133,27): error TS2322: Type '{ children: Element[]; padding: true; style: { flex: number; display: string; flexDirection: string; justifyContent: string; }; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+src/pages/user/Result.tsx(143,27): error TS2322: Type '{ children: Element[]; padding: true; style: { flex: number; display: string; flexDirection: string; justifyContent: string; }; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+src/pages/user/Result.tsx(160,43): error TS2322: Type '{ children: Element[]; key: number; padding: true; style: { display: string; flexDirection: string; }; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+src/pages/user/Result.tsx(175,45): error TS2322: Type '"success" | "warning" | "primary"' is not assignable to type '"success" | "primary" | "danger" | "accent" | undefined'.
+src/pages/user/Result.tsx(182,25): error TS2322: Type '{ children: Element; padding: true; style: { border: string; background: string; }; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+src/pages/user/Survey.tsx(378,108): error TS2339: Property 'cauHois' does not exist on type 'QuestionGroup | { nhom: number; tenNhom: string; }'.
+src/pages/user/Survey.tsx(383,34): error TS2339: Property 'cauHois' does not exist on type 'QuestionGroup | { nhom: number; tenNhom: string; }'.

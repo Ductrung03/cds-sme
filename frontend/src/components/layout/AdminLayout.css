@@ -1,0 +1,206 @@
+/* ============================================================
+   Admin Layout — Sidebar trái với main content
+   ============================================================ */
+.admin-layout {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background-color: var(--surface-subtle);
+}
+
+/* ---------- Sidebar ---------- */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%);
+  color: #fff;
+  padding: var(--space-6) var(--space-4);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+  padding: 0 var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+.admin-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background-color: var(--accent-500);
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
+}
+.admin-brand-logo::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  transform: rotate(45deg);
+}
+
+.admin-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.admin-brand-title {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: 0.02em;
+}
+.admin-brand-sub {
+  font-size: var(--text-xs);
+  opacity: 0.7;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  position: relative;
+}
+
+.admin-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.admin-nav-item.is-active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-nav-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  border-radius: 3px;
+  background-color: var(--accent-500);
+}
+
+.admin-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  color: currentColor;
+  opacity: 0.9;
+}
+
+.admin-sidebar-footer {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-user-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+.admin-user-name {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-user-role {
+  font-size: var(--text-xs);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.admin-sidebar-footer .btn-outline {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+.admin-sidebar-footer .btn-outline:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Main ---------- */
+.admin-main {
+  padding: var(--space-8) var(--space-8);
+  max-width: 1400px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+  .admin-sidebar {
+    position: relative;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+  }
+  .admin-brand {
+    margin-bottom: 0;
+    margin-right: auto;
+  }
+  .admin-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1 0 100%;
+    gap: 4px;
+    margin-top: var(--space-3);
+  }
+  .admin-nav-item {
+    padding: var(--space-2) var(--space-3);
+  }
+  .admin-sidebar-footer {
+    margin-top: 0;
+    flex-direction: row;
+    align-items: center;
+    border-top: none;
+    padding-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: var(--space-3);
+  }
+  .admin-user-card {
+    padding: var(--space-2) var(--space-3);
+  }
+  .admin-main {
+    padding: var(--space-5) var(--space-4);
+  }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CDS SME — Đánh giá chuyển đổi số doanh nghiệp nhỏ và vừa</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  /* Spinner */
+  .spin { animation: spin 1.2s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* density */
+  body[data-density="compact"] .card__body { padding: 16px; }
+  body[data-density="compact"] .card__head { padding: 14px 18px; }
+  body[data-density="compact"] .table td { padding: 12px 14px; }
+  body[data-density="compact"] .page { padding: 20px 24px 36px; }
+
+  /* Loader cover */
+  .boot {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: var(--surface-page); z-index: 1000;
+    transition: opacity 240ms ease;
+  }
+  .boot.is-hidden { opacity: 0; pointer-events: none; }
+  .boot__logo {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: linear-gradient(135deg, oklch(0.7 0.13 55), oklch(0.6 0.16 50));
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    margin-bottom: 16px; display: grid; place-items: center; color: #fff;
+    animation: pulseSize 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseSize { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.94); } }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div class="boot" id="boot">
+  <div style="text-align:center">
+    <div class="boot__logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 22 12 12 22 2 12z"/></svg>
+    </div>
+    <div style="font-family:'Outfit',sans-serif;font-size:14px;color:var(--text-muted)">Đang khởi tạo CDS SME…</div>
+  </div>
+</div>
+
+<!-- React + Babel (pinned) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- App modules (ordered) -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="admin.jsx"></script>
+<script type="text/babel" src="survey.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script>
+  // Hide boot loader once React mounts something
+  const checkBoot = () => {
+    const root = document.getElementById("root");
+    if (root && root.children.length > 0) {
+      document.getElementById("boot").classList.add("is-hidden");
+      setTimeout(() => document.getElementById("boot")?.remove(), 300);
+    } else {
+      setTimeout(checkBoot, 80);
+    }
+  };
+  setTimeout(checkBoot, 200);
+</script>
+
+</body>
+</html>

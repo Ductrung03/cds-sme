@@ -1,0 +1,138 @@
+/* ============================================================
+   DESIGN TOKENS — Hệ thống Đánh giá Chuyển đổi số SME
+   Palette: Slate xanh đậm + Amber vàng đồng + Stone ấm
+   ============================================================ */
+
+:root {
+  /* --- Màu nền (Surface) --- */
+  --surface-base:     #f7f5f2;   /* Stone 50 ấm */
+  --surface-raised:   #ffffff;
+  --surface-overlay:  #faf9f7;
+  --surface-subtle:   #f0ece6;   /* Stone 100 */
+  --surface-muted:    #e8e2da;   /* Stone 200 */
+
+  /* --- Màu chính (Brand / Primary) --- */
+  --brand-900: #0f2340;          /* Slate tối nhất */
+  --brand-800: #1e3a5f;          /* Chủ đạo — sidebar, header */
+  --brand-700: #2d5282;
+  --brand-600: #3b6fa6;
+  --brand-500: #4a8bc4;
+  --brand-400: #6ba3d6;
+  --brand-300: #93bfe5;
+  --brand-200: #c0d9f0;
+  --brand-100: #e2eef9;
+  --brand-50:  #f0f6fb;
+
+  /* --- Màu vàng đồng (Accent / Copper) --- */
+  --accent-900: #6b4800;
+  --accent-800: #8b5f00;
+  --accent-700: #a87500;
+  --accent-600: #c9a028;
+  --accent-500: #c9a84c;         /* Chủ đạo vàng đồng */
+  --accent-400: #d4b76a;
+  --accent-300: #e0ca94;
+  --accent-200: #ecddb8;
+  --accent-100: #f5edda;
+  --accent-50:  #faf6ee;
+
+  /* --- Màu ngữ nghĩa (Semantic) --- */
+  --color-success:      #1a7c52;
+  --color-success-bg:   #ecf9f2;
+  --color-success-border: #a3dfbf;
+  --color-warning:      #b45309;
+  --color-warning-bg:   #fffbeb;
+  --color-warning-border: #fcd34d;
+  --color-error:        #c0392b;
+  --color-error-bg:     #fef2f2;
+  --color-error-border: #fca5a5;
+  --color-info:         #1e60a8;
+  --color-info-bg:      #eff6ff;
+  --color-info-border:  #bfdbfe;
+
+  /* --- Text --- */
+  --text-primary:    #1a1410;    /* Stone 900 ấm */
+  --text-secondary:  #4a4540;    /* Stone 600 */
+  --text-tertiary:   #7a736b;    /* Stone 500 */
+  --text-disabled:   #b5afa8;    /* Stone 400 */
+  --text-inverse:    #ffffff;
+  --text-accent:     #c9a84c;
+  --text-brand:      #1e3a5f;
+
+  /* --- Border --- */
+  --border-subtle:   #e8e2da;
+  --border-default:  #d4cdc5;
+  --border-strong:   #b5afa8;
+  --border-brand:    #3b6fa6;
+  --border-accent:   #c9a84c;
+
+  /* --- Bóng (Shadow) --- */
+  --shadow-xs:  0 1px 2px 0 rgb(26 20 16 / 0.05);
+  --shadow-sm:  0 1px 3px 0 rgb(26 20 16 / 0.08), 0 1px 2px -1px rgb(26 20 16 / 0.06);
+  --shadow-md:  0 4px 6px -1px rgb(26 20 16 / 0.07), 0 2px 4px -2px rgb(26 20 16 / 0.05);
+  --shadow-lg:  0 10px 15px -3px rgb(26 20 16 / 0.08), 0 4px 6px -4px rgb(26 20 16 / 0.04);
+  --shadow-xl:  0 20px 25px -5px rgb(26 20 16 / 0.08), 0 8px 10px -6px rgb(26 20 16 / 0.04);
+  --shadow-inner: inset 0 2px 4px 0 rgb(26 20 16 / 0.06);
+
+  /* --- Radius --- */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  20px;
+  --radius-full: 9999px;
+
+  /* --- Spacing --- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* --- Typography --- */
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.25rem;    /* 20px */
+  --text-2xl:  1.5rem;     /* 24px */
+  --text-3xl:  1.875rem;   /* 30px */
+  --text-4xl:  2.25rem;    /* 36px */
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --weight-light:    300;
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extrabold:800;
+
+  /* --- Transition --- */
+  --transition-fast:   80ms ease;
+  --transition-base:   150ms ease;
+  --transition-slow:   250ms ease;
+  --transition-spring: 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Z-index --- */
+  --z-below:   -1;
+  --z-base:     0;
+  --z-raised:  10;
+  --z-dropdown: 100;
+  --z-sticky:  200;
+  --z-overlay: 300;
+  --z-modal:   400;
+  --z-toast:   500;
+}

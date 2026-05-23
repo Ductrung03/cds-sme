@@ -1,0 +1,54 @@
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cds-sme-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-LuckyDev!2026}"
+    ports:
+      - "${MSSQL_PORT:-1433}:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1'"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cds-sme-backend
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DB_HOST: mssql
+      DB_PORT: 1433
+      DB_USER: sa
+      DB_PASSWORD: "${MSSQL_SA_PASSWORD:-LuckyDev!2026}"
+      DB_NAME: "${DB_NAME:-cds_sme}"
+      DB_ENCRYPT: "false"
+      DB_TRUST_SERVER_CERTIFICATE: "true"
+      JWT_SECRET: "${JWT_SECRET:-change-me-in-production-please}"
+      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-12h}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:5173}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      AI_PROVIDER: "${AI_PROVIDER:-heuristic}"
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    profiles:
+      - full
+
+volumes:
+  mssql-data:

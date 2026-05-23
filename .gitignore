@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.vite/
+.turbo/
+.cache/
+coverage/
+
+# Environment files - giữ lại file mẫu
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime / temp
+tmp/
+temp/
+*.tmp
+*.pid
+*.seed
+*.pid.lock
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# Office temporary files
+~$*.docx
+~$*.xlsx
+
+# Docker / database local artifacts
+docker-data/
+data/
+*.bak
+*.mdf
+*.ldf
