@@ -19,7 +19,10 @@ import {
   upsertAssessmentSolution,
   findLatestScore,
   findIndustryById,
-  findAllAnswerOptionsByQuestionIds
+  findAllAnswerOptionsByQuestionIds,
+  findQuestionsByIds,
+  findQuestionGroups,
+  findSolutionsByIndustry
 } from "../../db/repository";
 import { ok, fail } from "../../utils/api-response";
 import { BadRequest, NotFound, Forbidden, UnprocessableEntity, Unauthorized } from "../../utils/errors";
@@ -318,6 +321,123 @@ router.get(
           ngayTao: r.CreatedAt
         }))
       );
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// --- GET /api/assessments/:id/review ---
+// Trả về view CHỈ ĐỌC cho user xem lại bài khảo sát của mình:
+// - Luôn trả: thông tin bài, ngành, danh sách câu hỏi đã trả lời (kèm nội dung câu/đáp án đã chọn),
+//   trạng thái bài.
+// - Nếu admin đã chấm/duyệt/công bố (status = scored | published): kèm tổng điểm + điểm từng nhóm
+//   + điểm của từng đáp án mà user đã chọn (Score của option).
+// - User chỉ xem được bài của chính mình (admin xem được mọi bài).
+// Phải đặt TRƯỚC "/:id" để Express route ordering không match nhầm "review" thành GUID.
+router.get(
+  "/:id/review",
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return next(Unauthorized());
+
+      const assessment = await findAssessmentById(req.params.id);
+      if (!assessment) return next(NotFound("Không tìm thấy bài khảo sát"));
+      if (assessment.UserId !== req.user.userId && req.user.role !== "admin") {
+        return next(Forbidden("Bạn không có quyền xem bài khảo sát này"));
+      }
+
+      const answers = await findAnswersByAssessment(assessment.Id);
+      const solutions = await findSolutionsByAssessment(assessment.Id);
+      const score = await findLatestScore(assessment.Id);
+
+      const qIds = [...new Set(answers.map((a) => a.QuestionId))];
+      const questions = await findQuestionsByIds(qIds);
+      const allOptions = await findAllAnswerOptionsByQuestionIds(qIds);
+
+      // Group info (groupNumber + tên nhóm)
+      const allGroups = await findQuestionGroups(assessment.QuestionnaireId);
+      const groupMap = new Map<number, { groupNumber: number; name: string }>();
+      for (const g of allGroups) {
+        groupMap.set(g.Id, { groupNumber: g.GroupNumber, name: g.Name });
+      }
+
+      // Option map (Id → {content, score, isOther, code})
+      const optionMap = new Map<number, { content: string; code: string; score: number; isOther: boolean }>();
+      for (const o of allOptions) {
+        optionMap.set(o.Id, { content: o.Content, code: o.Code, score: o.Score, isOther: !!o.IsOther });
+      }
+
+      // Industry
+      const industry = assessment.IndustryId ? await findIndustryById(assessment.IndustryId) : null;
+
+      // Có hiển thị điểm chi tiết không? (admin đã chấm)
+      const showScore = assessment.Status === "scored" || assessment.Status === "published";
+
+      // Industry solutions (để render nhóm 7 chọn giải pháp readonly)
+      const industrySolutions = assessment.IndustryId
+        ? await findSolutionsByIndustry(assessment.IndustryId)
+        : [];
+      const solutionMap = new Map(industrySolutions.map((s) => [s.Id, s]));
+
+      return ok(res, {
+        id: assessment.Id,
+        status: assessment.Status,
+        industryId: assessment.IndustryId,
+        maNganh: industry?.Code ?? "",
+        tenNganh: industry?.Name ?? undefined,
+        organizationName: assessment.OrganizationName,
+        contactName: assessment.ContactName,
+        contactEmail: assessment.ContactEmail,
+        contactPhone: assessment.ContactPhone,
+        submittedAt: assessment.SubmittedAt,
+        scoredAt: assessment.ScoredAt,
+        publishedAt: assessment.PublishedAt,
+        createdAt: assessment.CreatedAt,
+        canViewScore: showScore,
+        answers: answers.map((a) => {
+          const q = questions.find((x) => x.Id === a.QuestionId);
+          const gInfo = q ? groupMap.get(q.GroupId) : undefined;
+          const opt = a.OptionId ? optionMap.get(a.OptionId) : null;
+          return {
+            questionId: a.QuestionId,
+            questionCode: q?.Code ?? "",
+            questionContent: q?.Content ?? "",
+            groupNumber: gInfo?.groupNumber ?? 0,
+            groupName: gInfo?.name ?? "",
+            optionId: a.OptionId,
+            optionCode: opt?.code ?? null,
+            optionContent: opt?.content ?? null,
+            optionIsOther: opt?.isOther ?? false,
+            // Chỉ trả điểm khi admin đã chấm
+            optionScore: showScore ? (opt?.score ?? null) : null,
+            otherText: a.OtherText,
+            openText: a.OpenText,
+          };
+        }),
+        solutions: solutions.map((s) => {
+          const sol = solutionMap.get(s.SolutionId);
+          return {
+            solutionId: s.SolutionId,
+            solutionCode: sol?.Code ?? "",
+            solutionName: sol?.Name ?? "",
+            isSelected: s.IsSelected,
+            adminScore: showScore ? s.AdminScore : null,
+            note: showScore ? s.Note : null,
+          };
+        }),
+        score: showScore && score
+          ? {
+              normalizedScore: score.NormalizedScore,
+              rankLevel: score.RankLevel,
+              rankName: score.RankName,
+              isOverridden: score.IsOverridden,
+              groupBreakdown: JSON.parse(score.GroupBreakdown),
+              adminNote: score.OverrideReason ?? null,
+            }
+          : null,
+      });
     } catch (err) {
       return next(err);
     }

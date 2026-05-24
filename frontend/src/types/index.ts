@@ -163,7 +163,53 @@ export interface AssessmentDetail {
   };
 }
 
+// --- Assessment Review (user xem lại bài đã nộp - readonly) ---
+export interface ReviewAnswerItem {
+  questionId: number;
+  questionCode: string;
+  questionContent: string;
+  groupNumber: number;
+  groupName: string;
+  optionId?: number;
+  optionCode?: string;
+  optionContent?: string;
+  optionIsOther: boolean;
+  /** Chỉ có khi canViewScore = true (admin đã chấm) */
+  optionScore?: number | null;
+  otherText?: string;
+  openText?: string;
+}
+
+export interface AssessmentReview {
+  id: string;
+  status: string;
+  maNganh: string;
+  tenNganh?: string;
+  organizationName?: string;
+  contactName?: string;
+  submittedAt?: string;
+  scoredAt?: string;
+  publishedAt?: string;
+  canViewScore: boolean;
+  answers: ReviewAnswerItem[];
+  score?: {
+    normalizedScore: number;
+    rankLevel: number;
+    rankName: string;
+    groupBreakdown: { groups: { groupNumber: number; name: string; normalizedGroupScore: number }[] };
+    adminNote?: string;
+  } | null;
+}
+
 // --- AI Review ---
+/**
+ * Phân loại AI review cho đáp án "Khác":
+ * - "not_relevant": Không phù hợp với câu hỏi.
+ * - "matches_option": Phù hợp và có thể tính tương đương một đáp án có sẵn.
+ * - "relevant_but_no_match": Có liên quan nhưng không khớp đáp án nào có sẵn.
+ */
+export type AiReviewVerdict = 'not_relevant' | 'matches_option' | 'relevant_but_no_match';
+
 export interface AiReviewItem {
   cauHoiId: number;
   maCauHoi: string;
@@ -173,6 +219,10 @@ export interface AiReviewItem {
   lyDoGoiY: string;
   doDangTin: number;  // 0-1
   luaChonPhuHopId?: number;
+  verdict?: AiReviewVerdict;
+  isRelevant?: boolean;
+  matchedOptionCode?: string;
+  matchedOptionContent?: string;
 }
 
 export interface AiReviewResponse {

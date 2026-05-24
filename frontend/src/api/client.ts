@@ -168,6 +168,9 @@ export const assessmentApi = {
   getResult: (id: string) =>
     request<import('@/types').AssessmentResult>(`/assessments/${id}/result`),
 
+  getReview: (id: string) =>
+    request<import('@/types').AssessmentReview>(`/assessments/${id}/review`),
+
   getMyAssessments: () =>
     request<import('@/types').AssessmentListItem[]>('/assessments/me'),
 };
@@ -306,6 +309,10 @@ export const adminApi = {
         lyDoGoiY: r.reason ?? r.lyDoGoiY ?? '',
         doDangTin: r.confidence ?? r.doDangTin ?? 0,
         luaChonPhuHopId: r.suggestedOptionId ?? r.luaChonPhuHopId ?? undefined,
+        verdict: r.verdict as ('not_relevant' | 'matches_option' | 'relevant_but_no_match' | undefined),
+        isRelevant: r.isRelevant,
+        matchedOptionCode: r.matchedOptionCode ?? undefined,
+        matchedOptionContent: r.matchedOptionContent ?? undefined,
       })),
     } as import('@/types').AiReviewResponse;
   },
@@ -320,6 +327,10 @@ export const adminApi = {
       goiYPhanLoai: raw?.suggestion ?? '',
       doDangTin: raw?.confidence ?? 0,
       isRelevant: raw?.isRelevant ?? true,
+      verdict: raw?.verdict as ('not_relevant' | 'matches_option' | 'relevant_but_no_match' | undefined),
+      matchedOptionCode: raw?.matchedOptionCode ?? undefined,
+      matchedOptionContent: raw?.matchedOptionContent ?? undefined,
+      reason: raw?.reason ?? '',
     };
   },
 

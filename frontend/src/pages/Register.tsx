@@ -26,7 +26,7 @@ export function Register() {
 
   const validate = (): boolean => {
     const next: FormErrors = {};
-    if (!hoTen.trim()) next.hoTen = 'Vui lòng nhập họ tên';
+    if (!hoTen.trim()) next.hoTen = 'Vui lòng nhập họ và tên chủ doanh nghiệp';
     if (!email.trim()) next.email = 'Vui lòng nhập email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Email không hợp lệ';
     if (!matKhau) next.matKhau = 'Vui lòng nhập mật khẩu';
@@ -128,7 +128,7 @@ export function Register() {
           {/* Họ tên */}
           <div className="field">
             <label className="field__label" htmlFor="reg-hoten">
-              Họ và tên <span style={{ color: 'var(--danger)' }}>*</span>
+              Họ và tên chủ doanh nghiệp <span style={{ color: 'var(--danger)' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)', pointerEvents: 'none' }}>

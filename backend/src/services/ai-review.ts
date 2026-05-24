@@ -12,10 +12,22 @@ export interface AiReviewInput {
   availableOptions: { code: string; content: string }[];
 }
 
+/**
+ * Phân loại đánh giá AI cho đáp án "Khác":
+ * - "not_relevant": Câu trả lời không phù hợp với câu hỏi.
+ * - "matches_option": Phù hợp với câu hỏi và có thể quy về một đáp án có sẵn trong danh sách.
+ * - "relevant_but_no_match": Có liên quan tới câu hỏi nhưng không khớp với đáp án nào có sẵn.
+ */
+export type AiReviewVerdict = "not_relevant" | "matches_option" | "relevant_but_no_match";
+
 export interface AiReviewResult {
-  suggestion: string;       // Gợi ý phân loại / nhận xét ngắn
+  suggestion: string;       // Gợi ý phân loại / nhận xét ngắn (đã chuẩn hoá tiếng Việt)
   confidence: number;       // 0–1
   isRelevant: boolean;      // Câu trả lời có liên quan đến câu hỏi không
+  verdict: AiReviewVerdict; // Phân loại rõ 3 nhóm
+  matchedOptionCode?: string;    // Mã đáp án phù hợp (nếu verdict = matches_option)
+  matchedOptionContent?: string; // Nội dung đáp án phù hợp (nếu verdict = matches_option)
+  reason?: string;          // Giải thích ngắn vì sao phù hợp / không phù hợp
 }
 
 // -------------------------------------------------------------------
@@ -24,40 +36,48 @@ export interface AiReviewResult {
 function heuristicReview(input: AiReviewInput): AiReviewResult {
   const text = input.answerText.trim().toLowerCase();
   const isRelevant = text.length > 5;
-  const optionTexts = input.availableOptions.map((o) => o.content.toLowerCase());
 
-  let closestOption: string | null = null;
+  let bestOption: { code: string; content: string } | null = null;
   let bestScore = 0;
-  for (const opt of optionTexts) {
-    const words = opt.split(/\s+/);
+  for (const opt of input.availableOptions) {
+    const optText = opt.content.toLowerCase();
+    const words = optText.split(/\s+/).filter((w) => w.length > 1);
     const matches = words.filter((w) => text.includes(w)).length;
     const score = matches / Math.max(words.length, 1);
     if (score > bestScore) {
       bestScore = score;
-      closestOption = opt;
+      bestOption = opt;
     }
   }
 
   if (!isRelevant) {
     return {
-      suggestion: "Câu trả lời quá ngắn hoặc không rõ nghĩa",
+      suggestion: "Câu trả lời không phù hợp với câu hỏi (quá ngắn hoặc không rõ nghĩa).",
       confidence: 0.3,
       isRelevant: false,
+      verdict: "not_relevant",
+      reason: "Nội dung quá ngắn hoặc không có thông tin rõ ràng để đối chiếu với câu hỏi.",
     };
   }
 
-  if (closestOption && bestScore > 0.3) {
+  if (bestOption && bestScore > 0.3) {
     return {
-      suggestion: `Có thể phân loại vào: "${closestOption}"`,
+      suggestion: `Phù hợp — có thể tính tương đương đáp án [${bestOption.code}] ${bestOption.content}.`,
       confidence: Math.min(0.9, bestScore + 0.3),
       isRelevant: true,
+      verdict: "matches_option",
+      matchedOptionCode: bestOption.code,
+      matchedOptionContent: bestOption.content,
+      reason: `Nội dung trùng khớp nhiều từ khoá với đáp án "${bestOption.content}".`,
     };
   }
 
   return {
-    suggestion: "Câu trả lời có vẻ liên quan nhưng không khớp với các lựa chọn sẵn có",
+    suggestion: "Có liên quan tới câu hỏi nhưng không khớp với đáp án nào trong danh sách.",
     confidence: 0.5,
     isRelevant: true,
+    verdict: "relevant_but_no_match",
+    reason: "Không tìm thấy đáp án nào trong danh sách có nghĩa tương đương rõ rệt.",
   };
 }
 
@@ -82,22 +102,42 @@ async function geminiReview(input: AiReviewInput): Promise<AiReviewResult> {
 
 Câu hỏi khảo sát: "${input.questionContent}"
 
-Các lựa chọn đáp án có sẵn:
+Các lựa chọn đáp án có sẵn (dùng đúng mã trong [] khi tham chiếu):
 ${optionsList}
 
 Đáp án "Khác" mà doanh nghiệp tự nhập: "${input.answerText}"
 
 Nhiệm vụ:
-1. Đánh giá xem đáp án có liên quan đến câu hỏi không (isRelevant: true/false).
-2. Nếu có thể, gợi ý đáp án nào trong danh sách trên phù hợp nhất với câu trả lời này.
-3. Đưa ra mức độ tin cậy từ 0.0 đến 1.0.
+Phân loại đáp án "Khác" thành CHÍNH XÁC một trong ba trường hợp sau và trả về kết quả:
 
-Trả lời CHÍNH XÁC theo định dạng JSON sau, không thêm gì khác:
+1. "not_relevant" — Đáp án KHÔNG phù hợp với câu hỏi:
+   - Nội dung lạc đề, vô nghĩa, spam, hoặc không liên quan tới chủ đề câu hỏi.
+   - Khi đó: matchedOptionCode = null.
+
+2. "matches_option" — Đáp án PHÙ HỢP với câu hỏi và có thể TÍNH TƯƠNG ĐƯƠNG với MỘT đáp án trong danh sách:
+   - Nội dung doanh nghiệp nhập về bản chất giống một đáp án có sẵn (cùng nghĩa, cùng mức độ).
+   - Khi đó: matchedOptionCode = mã của đáp án phù hợp nhất, matchedOptionContent = nội dung đáp án đó.
+
+3. "relevant_but_no_match" — Đáp án PHÙ HỢP với câu hỏi nhưng KHÔNG khớp với đáp án nào có sẵn:
+   - Đúng chủ đề nhưng nội dung khác biệt rõ rệt với mọi đáp án trong danh sách.
+   - Khi đó: matchedOptionCode = null.
+
+Trả lời CHÍNH XÁC theo định dạng JSON sau, không thêm bất cứ gì khác (không markdown, không giải thích ngoài JSON):
 {
-  "isRelevant": true,
-  "suggestion": "Có thể phân loại vào [mã đáp án] - [tên đáp án] vì [lý do ngắn gọn]",
-  "confidence": 0.85
-}`;
+  "verdict": "not_relevant" | "matches_option" | "relevant_but_no_match",
+  "isRelevant": true | false,
+  "matchedOptionCode": "MÃ_ĐÁP_ÁN hoặc null",
+  "matchedOptionContent": "Nội dung đáp án hoặc null",
+  "reason": "Giải thích ngắn gọn (1-2 câu) bằng tiếng Việt",
+  "suggestion": "Câu gợi ý ngắn gọn bằng tiếng Việt cho admin",
+  "confidence": 0.0
+}
+
+Quy tắc:
+- isRelevant = false KHI VÀ CHỈ KHI verdict = "not_relevant".
+- matchedOptionCode chỉ có giá trị khi verdict = "matches_option" và phải nằm trong danh sách mã đáp án trên.
+- suggestion là câu ngắn gọn để admin nhìn vào hiểu ngay (ví dụ: "Phù hợp — có thể tính tương đương đáp án [DA01] ..." hoặc "Không phù hợp với câu hỏi.").
+- confidence ∈ [0.0, 1.0].`;
 
   try {
     const response = await fetch(url, {
@@ -107,7 +147,8 @@ Trả lời CHÍNH XÁC theo định dạng JSON sau, không thêm gì khác:
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.2,
-          maxOutputTokens: 256,
+          maxOutputTokens: 512,
+          responseMimeType: "application/json",
         },
       }),
     });
@@ -135,14 +176,59 @@ Trả lời CHÍNH XÁC theo định dạng JSON sau, không thêm gì khác:
     }
 
     const parsed = JSON.parse(jsonMatch[0]) as {
+      verdict?: string;
       isRelevant?: boolean;
+      matchedOptionCode?: string | null;
+      matchedOptionContent?: string | null;
+      reason?: string;
       suggestion?: string;
       confidence?: number;
     };
 
+    // Chuẩn hoá verdict
+    const allowedVerdicts: AiReviewVerdict[] = ["not_relevant", "matches_option", "relevant_but_no_match"];
+    let verdict: AiReviewVerdict = allowedVerdicts.includes(parsed.verdict as AiReviewVerdict)
+      ? (parsed.verdict as AiReviewVerdict)
+      : (parsed.isRelevant === false ? "not_relevant" : "relevant_but_no_match");
+
+    // Map matched option về đúng option trong danh sách (chống AI bịa)
+    let matchedOptionCode: string | undefined;
+    let matchedOptionContent: string | undefined;
+    if (verdict === "matches_option" && parsed.matchedOptionCode) {
+      const found = input.availableOptions.find(
+        (o) => o.code.toLowerCase() === String(parsed.matchedOptionCode).toLowerCase()
+      );
+      if (found) {
+        matchedOptionCode = found.code;
+        matchedOptionContent = found.content;
+      } else {
+        // AI trả mã không tồn tại → hạ verdict
+        verdict = "relevant_but_no_match";
+      }
+    }
+
+    const isRelevant = verdict !== "not_relevant";
+
+    const defaultSuggestion = (() => {
+      switch (verdict) {
+        case "not_relevant":
+          return "Không phù hợp với câu hỏi.";
+        case "matches_option":
+          return matchedOptionCode && matchedOptionContent
+            ? `Phù hợp — có thể tính tương đương đáp án [${matchedOptionCode}] ${matchedOptionContent}.`
+            : "Phù hợp với một đáp án trong danh sách.";
+        default:
+          return "Có liên quan tới câu hỏi nhưng không khớp với đáp án nào có sẵn.";
+      }
+    })();
+
     return {
-      isRelevant: parsed.isRelevant ?? true,
-      suggestion: parsed.suggestion ?? "Không có gợi ý",
+      verdict,
+      isRelevant,
+      matchedOptionCode,
+      matchedOptionContent,
+      reason: parsed.reason?.trim() || undefined,
+      suggestion: parsed.suggestion?.trim() || defaultSuggestion,
       confidence: typeof parsed.confidence === "number"
         ? Math.min(1, Math.max(0, parsed.confidence))
         : 0.7,
@@ -168,11 +254,16 @@ async function openaiReview(input: AiReviewInput): Promise<AiReviewResult> {
     .join("\n");
 
   const systemPrompt = `Bạn là chuyên gia đánh giá câu trả lời khảo sát chuyển đổi số SME Việt Nam.
-Trả lời CHÍNH XÁC theo JSON: {"isRelevant": bool, "suggestion": "string", "confidence": float 0-1}`;
+Phân loại đáp án "Khác" thành CHÍNH XÁC một trong 3 verdict:
+- "not_relevant": không phù hợp với câu hỏi.
+- "matches_option": phù hợp và tương đương MỘT đáp án có sẵn (kèm mã đáp án).
+- "relevant_but_no_match": có liên quan nhưng không khớp đáp án nào.
+Chỉ trả JSON: {"verdict": str, "isRelevant": bool, "matchedOptionCode": str|null, "matchedOptionContent": str|null, "reason": str, "suggestion": str (tiếng Việt ngắn), "confidence": float 0-1}.
+isRelevant = false KHI VÀ CHỈ KHI verdict = "not_relevant". matchedOptionCode chỉ có giá trị khi verdict = "matches_option" và phải thuộc danh sách mã đáp án được cho.`;
 
   const userMsg = `Câu hỏi: "${input.questionContent}"
 Đáp án có sẵn:\n${optionsList}
-Đáp án "Khác": "${input.answerText}"`;
+Đáp án "Khác" doanh nghiệp tự nhập: "${input.answerText}"`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -203,14 +294,50 @@ Trả lời CHÍNH XÁC theo JSON: {"isRelevant": bool, "suggestion": "string", 
     };
     const content = data?.choices?.[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(content) as {
+      verdict?: string;
       isRelevant?: boolean;
+      matchedOptionCode?: string | null;
+      matchedOptionContent?: string | null;
+      reason?: string;
       suggestion?: string;
       confidence?: number;
     };
 
+    const allowedVerdicts: AiReviewVerdict[] = ["not_relevant", "matches_option", "relevant_but_no_match"];
+    let verdict: AiReviewVerdict = allowedVerdicts.includes(parsed.verdict as AiReviewVerdict)
+      ? (parsed.verdict as AiReviewVerdict)
+      : (parsed.isRelevant === false ? "not_relevant" : "relevant_but_no_match");
+
+    let matchedOptionCode: string | undefined;
+    let matchedOptionContent: string | undefined;
+    if (verdict === "matches_option" && parsed.matchedOptionCode) {
+      const found = input.availableOptions.find(
+        (o) => o.code.toLowerCase() === String(parsed.matchedOptionCode).toLowerCase()
+      );
+      if (found) {
+        matchedOptionCode = found.code;
+        matchedOptionContent = found.content;
+      } else {
+        verdict = "relevant_but_no_match";
+      }
+    }
+
+    const isRelevant = verdict !== "not_relevant";
+
+    const defaultSuggestion =
+      verdict === "not_relevant"
+        ? "Không phù hợp với câu hỏi."
+        : verdict === "matches_option" && matchedOptionCode && matchedOptionContent
+        ? `Phù hợp — có thể tính tương đương đáp án [${matchedOptionCode}] ${matchedOptionContent}.`
+        : "Có liên quan tới câu hỏi nhưng không khớp đáp án nào có sẵn.";
+
     return {
-      isRelevant: parsed.isRelevant ?? true,
-      suggestion: parsed.suggestion ?? "Không có gợi ý",
+      verdict,
+      isRelevant,
+      matchedOptionCode,
+      matchedOptionContent,
+      reason: parsed.reason?.trim() || undefined,
+      suggestion: parsed.suggestion?.trim() || defaultSuggestion,
       confidence: typeof parsed.confidence === "number"
         ? Math.min(1, Math.max(0, parsed.confidence))
         : 0.7,

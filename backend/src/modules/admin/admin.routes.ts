@@ -290,6 +290,10 @@ router.post(
           answerId: ans.Id,
           questionId: ans.QuestionId,
           isRelevant: review.isRelevant,
+          verdict: review.verdict,
+          matchedOptionCode: review.matchedOptionCode ?? null,
+          matchedOptionContent: review.matchedOptionContent ?? null,
+          reason: review.reason ?? null,
           confidence: review.confidence,
           suggestion: review.suggestion
         });
@@ -356,6 +360,10 @@ router.post(
         questionId,
         answerId: ans.Id,
         isRelevant: review.isRelevant,
+        verdict: review.verdict,
+        matchedOptionCode: review.matchedOptionCode ?? null,
+        matchedOptionContent: review.matchedOptionContent ?? null,
+        reason: review.reason ?? null,
         confidence: review.confidence,
         suggestion: review.suggestion,
       });

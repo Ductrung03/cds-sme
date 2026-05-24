@@ -49,6 +49,14 @@ Thumbs.db
 # Docker / database local artifacts
 docker-data/
 data/
+exports/
 *.bak
 *.mdf
 *.ldf
+
+DESIGN.md
+LUCKY.md
+Hethong.docx
+/cds sme
+6. QD_PHU LUC I - BO TIEU CHI DANH GIA CDS SME_FN.PDF
+8. QD_PHU LUC III - GIAI PHAP PHU THUOC.pdf

@@ -127,15 +127,22 @@ export function AdminDetail() {
       // Upsert vào aiReview state
       setAiReview((prev) => {
         const exists = prev.find(x => x.cauHoiId === questionId);
+        const lyDo = res.reason && res.reason.trim().length > 0
+          ? res.reason
+          : (res.isRelevant ? 'Câu trả lời có liên quan đến câu hỏi.' : 'Câu trả lời không phù hợp với câu hỏi.');
         const item: AiReviewItem = {
           cauHoiId: res.cauHoiId,
           maCauHoi: '',
           noiDungCauHoi: '',
           dapAnKhac: '',
           goiYPhanLoai: res.goiYPhanLoai,
-          lyDoGoiY: res.isRelevant ? 'Câu trả lời có liên quan đến câu hỏi' : 'Câu trả lời có thể không liên quan',
+          lyDoGoiY: lyDo,
           doDangTin: res.doDangTin,
           luaChonPhuHopId: undefined,
+          verdict: res.verdict,
+          isRelevant: res.isRelevant,
+          matchedOptionCode: res.matchedOptionCode,
+          matchedOptionContent: res.matchedOptionContent,
         };
         if (exists) {
           return prev.map(x => x.cauHoiId === questionId ? item : x);
@@ -613,31 +620,71 @@ export function AdminDetail() {
                           )}
 
                           {/* AI Suggestion box */}
-                          {aiSuggest && (
-                            <div style={{
-                              marginTop: 12, marginLeft: 32,
-                              padding: 16,
-                              borderRadius: 'var(--r-md)',
-                              background: 'linear-gradient(135deg, var(--accent-tint) 0%, transparent 100%)',
-                              border: '1px solid oklch(0.85 0.07 60)',
-                            }}>
+                          {aiSuggest && (() => {
+                            const verdict = aiSuggest.verdict;
+                            // Màu sắc và nhãn theo verdict
+                            const tone =
+                              verdict === 'not_relevant'
+                                ? { bg: 'var(--danger-tint)', border: 'oklch(0.85 0.06 25)', fg: 'var(--danger)', label: 'Không phù hợp với câu hỏi' }
+                                : verdict === 'matches_option'
+                                ? { bg: 'var(--success-tint)', border: 'oklch(0.85 0.08 145)', fg: 'var(--success)', label: 'Phù hợp — tương đương đáp án có sẵn' }
+                                : verdict === 'relevant_but_no_match'
+                                ? { bg: 'var(--info-tint)', border: 'oklch(0.85 0.06 240)', fg: 'var(--info)', label: 'Có liên quan nhưng không khớp đáp án nào' }
+                                : { bg: 'var(--accent-tint)', border: 'oklch(0.85 0.07 60)', fg: 'var(--accent)', label: 'Đề xuất từ AI' };
+                            const confidencePct = Math.round((aiSuggest.doDangTin || 0) * 100);
+                            return (
                               <div style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                                textTransform: 'uppercase', color: 'var(--accent)',
-                                marginBottom: 8,
+                                marginTop: 12, marginLeft: 32,
+                                padding: 16,
+                                borderRadius: 'var(--r-md)',
+                                background: tone.bg,
+                                border: `1px solid ${tone.border}`,
                               }}>
-                                <Icons.Sparkles size={13} />
-                                Đề xuất từ AI
+                                <div style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                                  marginBottom: 8,
+                                }}>
+                                  <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                                    textTransform: 'uppercase', color: tone.fg,
+                                  }}>
+                                    <Icons.Sparkles size={13} />
+                                    {tone.label}
+                                  </div>
+                                  {confidencePct > 0 && (
+                                    <div style={{
+                                      fontSize: 11, fontWeight: 700, color: tone.fg,
+                                      padding: '2px 8px', borderRadius: 999,
+                                      background: 'var(--surface)', border: `1px solid ${tone.border}`,
+                                    }}>
+                                      Độ tin cậy {confidencePct}%
+                                    </div>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600, marginBottom: 4 }}>
+                                  {aiSuggest.goiYPhanLoai}
+                                </div>
+                                {verdict === 'matches_option' && aiSuggest.matchedOptionContent && (
+                                  <div style={{
+                                    marginTop: 8, marginBottom: 6,
+                                    fontSize: 12, color: 'var(--text)',
+                                    padding: '8px 10px', borderRadius: 8,
+                                    background: 'var(--surface)', border: `1px dashed ${tone.border}`,
+                                  }}>
+                                    <strong style={{ color: tone.fg }}>Đáp án tương đương:</strong>{' '}
+                                    {aiSuggest.matchedOptionCode ? `[${aiSuggest.matchedOptionCode}] ` : ''}
+                                    {aiSuggest.matchedOptionContent}
+                                  </div>
+                                )}
+                                {aiSuggest.lyDoGoiY && (
+                                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                                    {aiSuggest.lyDoGoiY}
+                                  </div>
+                                )}
                               </div>
-                              <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500, marginBottom: 4 }}>
-                                {aiSuggest.goiYPhanLoai}
-                              </div>
-                              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                                {aiSuggest.lyDoGoiY}
-                              </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       );
                     })}
